@@ -1,3 +1,8 @@
+# General
+Internetradion based on ESP32 using a Nextion touchscreen to switch the stations
+
+![Internetradio](./Internetradio_2.jpg)
+
 # Hardware connection 
 **_Important!_**
 
