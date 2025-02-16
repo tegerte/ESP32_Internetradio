@@ -1,55 +1,86 @@
-/**
- * @example CompHotspot.ino
- *
- * @par How to Use
- * This example shows that ,when the hot component on the Nextion screen is pressed or released,
- * the debug serial will output the debug information every time. 
- *
- * @author  Wu Pengfei (email:<pengfei.wu@itead.cc>)
- * @date    2015/7/10
- * @updated 2016/12/25 bring HMI up to v0.32 to avoid too old issues
- * @convert by Patrick Martin, no other changes made
- * @copyright 
- * Copyright (C) 2014-2015 ITEAD Intelligent Systems Co., Ltd. \n
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
+/*
+Internetradio mit Nextion Display und ESP32.
+ 
  */
 #include "Nextion.h"
 #include "NexButton.h"
+#include <WiFiManager.h>
+#include "Arduino.h"
+// #include "AudioTools.h"   // AudioTools library coming soon
 
+NexButton b_Schw = NexButton(0, 1, "bschw");
+NexButton b_bob = NexButton(0, 2, "bbob");
 
-NexButton b_Schw    = NexButton(0, 1, "bschw");
-NexButton b_bob    = NexButton(0, 2, "bbob");
+NexTouch *nex_listen_list[] =
+    {
+        &b_Schw,
+        &b_bob,
+        NULL};
 
+void Schw_PopCallback(void *ptr);
+void Schw_PushCallback(void *ptr);
+void Bob_PopCallback(void *ptr);
+void Bob_PushCallback(void *ptr);
 
+bool Setup_WiFi_();
 
-NexTouch *nex_listen_list[] = 
+void setup(void)
 {
-    &b_Schw,
-    &b_bob,
-    NULL
-};
+    
+    setup_display();
+    bool wifi=Setup_WiFi_();
+    
+    pinMode(BUILTIN_LED, OUTPUT);
+}
 
+// Setup the WiFi
+bool Setup_WiFi_()
+{
+    WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+    WiFiManager wm;
+    bool res;
+    res = wm.autoConnect("AutoConnectAP"); // anonymous ap
+    if (!res)
+    {
+        dbSerialPrintln("Failed to connect");
+        ESP.restart();
+    }
+    else
+    {
+        dbSerialPrintln("connected...yeey :)");
+        return true;
+    }
+}
 
+void loop(void)
+{
+    nexLoop(nex_listen_list);
+}
 
+// Setup the display
 
+void setup_display()
+{
+    nexInit();
+    b_Schw.attachPush(Schw_PushCallback, &b_Schw);
+    b_Schw.attachPop(Schw_PopCallback, &b_Schw);
+    b_bob.attachPush(Bob_PushCallback, &b_bob);
+    b_bob.attachPop(Bob_PopCallback, &b_bob);
+    dbSerialPrintln("setup done");
+}
 void Schw_PopCallback(void *ptr)
 {
     dbSerialPrintln("hot0PopCallback");
     dbSerialPrint("ptr=");
     dbSerialPrintln((uint32_t)ptr);
-  digitalWrite(BUILTIN_LED, LOW);  
-
+    digitalWrite(BUILTIN_LED, LOW);
 }
 void Schw_PushCallback(void *ptr)
 {
     dbSerialPrintln("hot0PushCallback");
     dbSerialPrint("ptr=");
     dbSerialPrintln((uint32_t)ptr);
-  digitalWrite(BUILTIN_LED, HIGH);  
-
+    digitalWrite(BUILTIN_LED, HIGH);
 }
 
 void Bob_PopCallback(void *ptr)
@@ -63,23 +94,4 @@ void Bob_PushCallback(void *ptr)
     dbSerialPrintln("hot1PopCallback");
     dbSerialPrint("ptr=");
     dbSerialPrintln((uint32_t)ptr);
-}
-
-void setup(void)
-{
-    
-     
-    nexInit();
-   
-    b_Schw.attachPush(Schw_PushCallback, &b_Schw);
-    b_Schw.attachPop(Schw_PopCallback, &b_Schw);
-    b_bob.attachPush(Bob_PushCallback, &b_bob);
-    b_bob.attachPop(Bob_PopCallback, &b_bob);
-    dbSerialPrintln("setup done");
-     pinMode(BUILTIN_LED, OUTPUT);
-}
-
-void loop(void)
-{
-    nexLoop(nex_listen_list);
 }
