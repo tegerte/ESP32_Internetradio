@@ -43,11 +43,11 @@ void setup(void)
     if (wifi)
     {
        url.begin("http://stream.radioregenbogen.de/regenbogen-mp3-hq");
-       url.
+       
     }
     else
     {
-        dbSerialPrintln("WiFi not connected");
+        t1.setText("WiFi not connected");
     }
 
     pinMode(BUILTIN_LED, OUTPUT);
